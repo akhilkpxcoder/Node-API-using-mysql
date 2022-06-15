@@ -1,10 +1,19 @@
 const db = require("../config/db.config.js");
 const User = db.user;
+const logger = require("../middlewares/logger");
 
 // Post a user
 exports.create = (req, res) => {
   // Save to MySQL database
-  try{
+  const email = req.body.email;
+  try
+  {
+    if (User.findOne({email})) {
+      res.status(500).json({
+        Message: 'Email ' + req.body.email + ' is already registered',
+      });
+      throw 'Email "' + req.body.email + '" is already registered';
+  }
   User.create({
     name: req.body.name,
     email: req.body.email,
@@ -16,18 +25,18 @@ exports.create = (req, res) => {
       message: "User created successfully",
     });
   });
-}
-catch(e){
-res.status(404).json({
-  status: false,
-  message: "Error Occured",
-});
+} catch (err) {
+  logger.info(err);
+  res.status(500).json({
+    Message: err.message,
+  });
 }
 };
 
 // Get all users
 exports.findAll = (req, res) => {
-  try{
+  try
+  {
   User.findAll().then((users) => {
     // Send all users as response
     res.status(200).json({
@@ -35,25 +44,37 @@ exports.findAll = (req, res) => {
       data: users,
     });
   });
-}
-catch(e){
-res.status(404);
+} catch (err) {
+  logger.info(err);
+  res.status(500).json({
+    Message: err.message,
+  });
 }
 };
 
 // Find a user by Id
 exports.findByPk = (req, res) => {
+  try
+  {
   User.findByPk(req.params.userId).then((user) => {
     res.status(200).json({
       status: true,
       data: user,
     });
   });
+} catch (err) {
+  logger.info(err);
+  res.status(500).json({
+    Message: err.message,
+  });
+}
 };
 
 // Update a user
 exports.update = (req, res) => {
   const id = req.params.userId;
+  try
+  {
   User.update(
     {
       name: req.body.name,
@@ -68,11 +89,19 @@ exports.update = (req, res) => {
         message: "User updated successfully with id = " + id
     });
   });
+} catch (err) {
+  logger.info(err);
+  res.status(500).json({
+    Message: err.message,
+  });
+}
 };
 
 // Delete a user by Id
 exports.delete = (req, res) => {
   const id = req.params.userId;
+  try
+  {
   User.destroy({
     where: { id: id },
   }).then(() => {
@@ -81,4 +110,10 @@ exports.delete = (req, res) => {
         message: "User deleted successfully with id = " + id
     });
   });
+} catch (err) {
+  logger.info(err);
+  res.status(500).json({
+    Message: err.message,
+  });
+}
 };
